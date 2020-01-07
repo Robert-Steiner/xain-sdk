@@ -8,9 +8,9 @@ from typing import Dict, List, Tuple
 from grpc import Channel, insecure_channel
 from numproto import ndarray_to_proto, proto_to_ndarray
 from numpy import ndarray
+
 from xain_proto.fl import coordinator_pb2
 from xain_proto.fl.coordinator_pb2_grpc import CoordinatorStub
-
 from xain_sdk.logger import get_logger
 from xain_sdk.participant import Participant
 
@@ -293,7 +293,11 @@ def start_participant(participant: Participant, coordinator_url: str) -> None:
     """
 
     # use insecure channel for now
-    with insecure_channel(target=coordinator_url) as channel:  # thread-safe
+    options = [
+        ("grpc.max_receive_message_length", -1),
+        ("grpc.max_send_message_length", -1),
+    ]
+    with insecure_channel(target=coordinator_url, options=options) as channel:  # thread-safe
         rendezvous(channel=channel)
 
         state_record: StateRecord = StateRecord()
