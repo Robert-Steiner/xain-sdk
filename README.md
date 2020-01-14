@@ -138,7 +138,7 @@ Please see the following examples showing how to implement your Participant with
 
 You can connect multiple participants at once running in parallel to a coordinator with the following script:
 
-[Keras/Tensorflow example for the SDK Participant implementation](https://github.com/xainag/xain-sdk/tree/development/examples/README.md)
+[Bash script for starting multiple participants](https://github.com/xainag/xain-sdk/tree/master/examples#start-multiple-participants-in-parallel)
 
 
 ## Getting help
