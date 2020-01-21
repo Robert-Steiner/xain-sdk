@@ -15,10 +15,12 @@ class Participant(ABC):
     ) -> Tuple[List[ndarray], int, Dict[str, ndarray]]:
         """Train a model in a federated learning round.
 
-        Either a model is given in terms of its weights or the weights have to be initialized by the
-        participant. Then the model is trained on the participant's dataset for a number of epochs.
-        The weights of the updated model are returned in combination with the number of samples of
-        the train dataset and some gathered metrics.
+        A model is given in terms of its weights and the model is trained on the participant's
+        dataset for a number of epochs. The weights of the updated model are returned in combination
+        with the number of samples of the train dataset and some gathered metrics.
+
+        If no weights are given (i.e. an empty list of weights), then the participant is expected to
+        initialize the weights according to its model definition and return them without training.
 
         Args:
             weights (~typing.List[~numpy.ndarray]): The weights of the model to be trained.

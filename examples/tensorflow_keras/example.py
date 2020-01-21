@@ -46,10 +46,12 @@ class Participant(ABCParticipant):
     ) -> Tuple[List[np.ndarray], int, Dict[str, np.ndarray]]:
         """Train a model in a federated learning round.
 
-        Either a model is given in terms of its weights or the weights have to be initialized by the
-        participant. Then the model is trained on the participant's dataset for a number of epochs.
-        The weights of the updated model are returned in combination with the number of samples of
-        the train dataset and some gathered metrics.
+        A model is given in terms of its weights and the model is trained on the participant's
+        dataset for a number of epochs. The weights of the updated model are returned in combination
+        with the number of samples of the train dataset and some gathered metrics.
+
+        If no weights are given (i.e. an empty list of weights), then the participant is expected to
+        initialize the weights according to its model definition and return them without training.
 
         Args:
             weights (~typing.List[~numpy.ndarray]): The weights of the model to be trained.
@@ -62,24 +64,32 @@ class Participant(ABCParticipant):
                 updated model weights, the number of training samples and the gathered metrics.
         """
 
-        # load the weights of the global model into the local model or initialize them
-        if weights:
-            self.model.set_weights(weights)
-        else:
-            self.init_model()
+        number_samples: int
+        metrics: Dict[str, np.ndarray]
 
-        # train the local model for the specified number of epochs and gather the metrics
-        metrics_per_epoch: List[List[np.ndarray]] = []
-        for _ in range(epochs):
-            self.model.fit(x=self.trainset, verbose=2, shuffle=False)
-            metrics_per_epoch.append(self.model.evaluate(x=self.valset, verbose=0))
-        metrics: Dict[str, np.ndarray] = {
-            name: np.stack(np.atleast_1d(*metric))
-            for name, metric in zip(self.model.metrics_names, zip(*metrics_per_epoch))
-        }
+        if weights:
+            # load the weights of the global model into the local model
+            self.model.set_weights(weights)
+
+            # train the local model for the specified number of epochs and gather the metrics
+            number_samples = 80
+            metrics_per_epoch: List[List[np.ndarray]] = []
+            for _ in range(epochs):
+                self.model.fit(x=self.trainset, verbose=2, shuffle=False)
+                metrics_per_epoch.append(self.model.evaluate(x=self.valset, verbose=0))
+            metrics = {
+                name: np.stack(np.atleast_1d(*metric))
+                for name, metric in zip(self.model.metrics_names, zip(*metrics_per_epoch))
+            }
+
+        else:
+            # initialize the weights of the local model
+            self.init_model()
+            number_samples = 0
+            metrics = {}
 
         # return the updated model weights, the number of train samples and the gathered metrics
-        return self.model.get_weights(), 80, metrics
+        return self.model.get_weights(), number_samples, metrics
 
     def init_model(self) -> None:
         """Initialize a model."""

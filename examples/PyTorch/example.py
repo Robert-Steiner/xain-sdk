@@ -49,10 +49,12 @@ class Participant(ABCParticipant):
     ) -> Tuple[List[np.ndarray], int, Dict[str, np.ndarray]]:
         """Train a model in a federated learning round.
 
-        Either a model is given in terms of its weights or the weights have to be initialized by the
-        participant. Then the model is trained on the participant's dataset for a number of epochs.
-        The weights of the updated model are returned in combination with the number of samples of
-        the train dataset and some gathered metrics.
+        A model is given in terms of its weights and the model is trained on the participant's
+        dataset for a number of epochs. The weights of the updated model are returned in combination
+        with the number of samples of the train dataset and some gathered metrics.
+
+        If no weights are given (i.e. an empty list of weights), then the participant is expected to
+        initialize the weights according to its model definition and return them without training.
 
         Args:
             weights (~typing.List[~numpy.ndarray]): The weights of the model to be trained.
@@ -65,23 +67,31 @@ class Participant(ABCParticipant):
                 updated model weights, the number of training samples and the gathered metrics.
         """
 
-        # load the weights of the global model into the local model or initialize them
-        if weights:
-            self.model.read_from_vector(self.indices, weights, self.shapes)  # type: ignore
-        else:
-            self.init_model()
+        number_samples: int
+        metrics: Dict[str, np.ndarray]
 
-        # train the local model for the specified number of epochs and gather the metrics
-        self.model.train_n_epochs(self.trainloader, epochs)
-        (  # pylint: disable=attribute-defined-outside-init
-            self.flattened,
-            self.shapes,
-            self.indices,
-        ) = self.model.flatten_weights()
-        metrics: Dict[str, np.ndarray] = {}  # TODO: return metric values from `train_n_epochs`
+        if weights:
+            # load the weights of the global model into the local model
+            self.model.read_from_vector(self.indices, weights, self.shapes)  # type: ignore
+
+            # train the local model for the specified number of epochs and gather the metrics
+            number_samples = len(self.trainloader)
+            self.model.train_n_epochs(self.trainloader, epochs)
+            (  # pylint: disable=attribute-defined-outside-init
+                self.flattened,
+                self.shapes,
+                self.indices,
+            ) = self.model.flatten_weights()
+            metrics = {}  # TODO: return metric values from `train_n_epochs`
+
+        else:
+            # initialize the weights of the local model
+            self.init_model()
+            number_samples = 0
+            metrics = {}
 
         # return the updated model weights, the number of train samples and the gathered metrics
-        return self.flattened, len(self.trainloader), metrics
+        return self.flattened, number_samples, metrics
 
     def init_model(self) -> None:
         """Initialize a model."""
