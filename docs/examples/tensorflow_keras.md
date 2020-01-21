@@ -126,13 +126,12 @@ The implementation of the actual `train_round()` method consists of three main s
 ```python
 if weights:
     self.model.set_weights(weights)
-else:
-    self.init_model()
 ```
 
-or they have to be initialzed if no weights are present. Next, the local model is trained for certain `epochs` on the local data, whereby the metrics are gathered in each epoch, as
+Next, the local model is trained for certain `epochs` on the local data, whereby the metrics are gathered in each epoch, as
 
 ```python
+number_samples = 80
 metrics_per_epoch: List[List[np.ndarray]] = []
 for _ in range(epochs):
     self.model.fit(x=self.trainset, verbose=2, shuffle=False)
@@ -142,7 +141,7 @@ for _ in range(epochs):
 The metrics are transformed into a dictionary, which maps metric names to the gathered metric values, by
 
 ```python
-metrics: Dict[str, np.ndarray] = {
+metrics = {
     name: np.stack(np.atleast_1d(*metric))
     for name, metric in zip(self.model.metrics_names, zip(*metrics_per_epoch))
 }
@@ -153,5 +152,14 @@ This explicit training loop is due to the Tensorflow v1 datasets and their handl
 Finally, the updated weights of the local model, the number of samples of the train dataset and the gathered metrics are returned, as
 
 ```python
-return self.model.get_weights(), 80, metrics
+return self.model.get_weights(), number_samples, metrics
+```
+
+If there are no weights provided, then the participant initializes new weights according to its model definition and returns them without further training, as
+
+```python
+else:
+    self.init_model()
+    number_samples = 0
+    metrics = {}
 ```

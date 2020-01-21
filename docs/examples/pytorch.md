@@ -182,14 +182,22 @@ As mentioned before we want to perform three crucial steps in this method
 ```python 
 if weights:
     self.model.read_from_vector(self.indices, weights, self.shapes)
-else:
-    self.init_model()
-self.model.train_n_epochs(self.trainloader, epochs)
-self.flattened, self.shapes, self.indices = self.model.flatten_weights()
+    self.model.train_n_epochs(self.trainloader, epochs)
+    self.flattened, self.shapes, self.indices = self.model.flatten_weights()
 ```
 
 which we defined together with the CNN class. The last step is to calculate matrices that we are interested in our model.
 
 ```python
-print("Training accuracy", self.model.evaluate_on_test(self.testloader))
+number_samples = len(self.trainloader)
+metrics = self.model.evaluate_on_test(self.testloader))
+```
+
+If there are no weights provided, then the participant initializes new weights according to its model definition and returns them without further training, as
+
+```python
+else:
+    self.init_model()
+    number_samples = 0
+    metrics = {}
 ```

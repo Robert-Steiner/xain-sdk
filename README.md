@@ -73,17 +73,22 @@ class MyParticipant(Participant):
         self, weights: List[ndarray], epochs: int, epoch_base: int
     ) -> Tuple[List[ndarray], int, Dict[str, ndarray]]:
         
-        # define the number of samples in the training dataset
-        number_train_samples: int = 80
-        
-        # load weights into the model
-        ...
+        if weights:
+            # define the number of samples in the training dataset
+            number_train_samples: int = 80
+            
+            # load weights into the model
+            ...
 
-        # train the model for the specified number of epochs
-        ...
-        
-        # gather the metrics of the trained epochs
-        ...
+            # train the model for the specified number of epochs
+            ...
+            
+            # gather the metrics of the trained epochs
+            ...
+
+        else:
+            # initialize new weights for the model
+            ...
 
         # return the updated weights
         return weights, number_train_samples, metrics
